@@ -574,7 +574,12 @@ export const ChatInput = forwardRef<ChatInputHandle, Props>(function ChatInput({
       .filter((command) => {
         const name = command.name.toLowerCase();
         const description = getSlashDescription(command, t).toLowerCase();
-        return name.includes(slashQuery) || description.includes(slashQuery);
+        // Match the query at the start of a word (e.g. "ask" should not
+        // match "task"), preserving substring matches that begin a word
+        // such as "asks" / "asked".
+        const matchesQuery = (text: string) =>
+          text.split(/[^a-z0-9]/).some((word) => word.startsWith(slashQuery));
+        return matchesQuery(name) || matchesQuery(description);
       })
       .sort((a, b) => {
         const rankDelta = slashMatchRank(a, slashQuery, t) - slashMatchRank(b, slashQuery, t);
