@@ -219,6 +219,26 @@ export function ChatWindow({ session, newSessionCwd, onAgentEnd, onSessionCreate
   });
   const sessionBusy = agentRunning || bashRunning;
 
+  // Follow streaming output: while the agent streams, keep the view pinned to
+  // the bottom unless the user has scrolled away from it. Replaces the old
+  // scroll-lock placeholder that left a blank pane during runs.
+  const streamFollowRef = useRef(true);
+  useEffect(() => {
+    const container = scrollContainerRef.current;
+    if (!container) return;
+    const onScroll = () => {
+      const nearBottom = container.scrollTop + container.clientHeight >= container.scrollHeight - 80;
+      streamFollowRef.current = nearBottom;
+    };
+    container.addEventListener("scroll", onScroll, { passive: true });
+    return () => container.removeEventListener("scroll", onScroll);
+  }, [scrollContainerRef]);
+  useEffect(() => {
+    if (!streamState.isStreaming || !streamState.streamingMessage) return;
+    const container = scrollContainerRef.current;
+    if (!container || !streamFollowRef.current) return;
+    container.scrollTop = container.scrollHeight;
+  }, [streamState.streamingMessage, streamState.isStreaming, scrollContainerRef]);
   useEffect(() => {
     if (!extensionDialog || soundedExtensionDialogIdRef.current === extensionDialog.id) return;
     soundedExtensionDialogIdRef.current = extensionDialog.id;
@@ -717,10 +737,6 @@ export function ChatWindow({ session, newSessionCwd, onAgentEnd, onSessionCreate
                 } as BashExecutionMessage}
                 sessionId={session?.id ?? sessionIdRef.current ?? undefined}
               />
-            )}
-
-            {agentRunning && (
-              <div style={{ height: scrollContainerRef.current ? scrollContainerRef.current.clientHeight : "80vh" }} />
             )}
 
             <div ref={messagesEndRef} />
