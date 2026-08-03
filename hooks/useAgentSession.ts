@@ -476,6 +476,13 @@ export function useAgentSession(opts: UseAgentSessionOptions) {
       setEntryIds(d.context.entryIds ?? []);
       setCurrentModelOverride(null);
       setError(null);
+      // A freshly opened session always starts at the latest message.
+      // Reset the one-shot scroll state so the initial scroll-to-bottom fires
+      // even when switching from another session (where the user may have
+      // scrolled, leaving completionScrollAllowed=false).
+      initialScrollDoneRef.current = false;
+      pendingScrollToUserRef.current = false;
+      completionScrollAllowedRef.current = true;
       if (d.context.thinkingLevel && d.context.thinkingLevel !== "off") {
         setThinkingLevel(d.context.thinkingLevel as ThinkingLevelOption);
       }
@@ -524,6 +531,10 @@ export function useAgentSession(opts: UseAgentSessionOptions) {
       const d = await res.json() as { context: { messages: AgentMessage[]; entryIds: string[] } };
       setMessages(d.context.messages);
       setEntryIds(d.context.entryIds ?? []);
+      // Branch/leaf switches load a different tail; land at its latest message.
+      initialScrollDoneRef.current = false;
+      pendingScrollToUserRef.current = false;
+      completionScrollAllowedRef.current = true;
     } catch (e) {
       console.error("Failed to load context:", e);
     }
@@ -1682,6 +1693,15 @@ export function useAgentSession(opts: UseAgentSessionOptions) {
 
   const scrollToBottom = useCallback((behavior: ScrollBehavior = "smooth") => {
     ignoreProgrammaticScrollUntilRef.current = Date.now() + PROGRAMMATIC_SCROLL_IGNORE_MS;
+    const container = scrollContainerRef.current;
+    if (container) {
+      if (behavior === "smooth") {
+        container.scrollTo({ top: container.scrollHeight, behavior: "smooth" });
+      } else {
+        container.scrollTop = container.scrollHeight;
+      }
+      return;
+    }
     messagesEndRef.current?.scrollIntoView({ behavior });
   }, []);
 
