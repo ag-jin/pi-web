@@ -13,6 +13,10 @@ import {
   buildEntriesFromFiles, buildAtInsertText, extractAtQuery, filterFileEntries,
   type AtQueryMatch, type FileIndexEntry,
 } from "@/lib/file-fuzzy";
+import {
+  EXPERT_ROSTER, EXPERT_TEAM_PRESETS, expertLabel, expertMembers, expertReferenceText,
+  type ExpertSelection,
+} from "@/lib/expert-roster";
 import { FolderIcon, getFileIcon } from "./FileIcons";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { useI18n } from "@/hooks/useI18n";
@@ -332,6 +336,8 @@ export const ChatInput = forwardRef<ChatInputHandle, Props>(function ChatInput({
   const [toolDropdownOpen, setToolDropdownOpen] = useState(false);
   const [thinkingDropdownOpen, setThinkingDropdownOpen] = useState(false);
   const [controlsMenuOpen, setControlsMenuOpen] = useState(false);
+  const [expertPickerOpen, setExpertPickerOpen] = useState(false);
+  const [expertSelection, setExpertSelection] = useState<ExpertSelection>(null);
   const [attachedImages, setAttachedImages] = useState<AttachedImage[]>(() => (
     draftKey ? draftImagesToAttachedImages(getDraft(draftKey)?.images) : []
   ));
@@ -362,6 +368,7 @@ export const ChatInput = forwardRef<ChatInputHandle, Props>(function ChatInput({
   const toolDropdownRef = useRef<HTMLDivElement>(null);
   const thinkingDropdownRef = useRef<HTMLDivElement>(null);
   const controlsMenuRef = useRef<HTMLDivElement>(null);
+  const expertPickerRef = useRef<HTMLDivElement>(null);
   const historyMenuRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const isComposingRef = useRef(false);
@@ -559,9 +566,10 @@ export const ChatInput = forwardRef<ChatInputHandle, Props>(function ChatInput({
         return;
       }
     }
-    onSend(msg, attachedImages.length ? attachedImages : undefined);
+    const reference = expertReferenceText(expertSelection);
+    onSend(reference ? `${reference}:\n\n${msg}` : msg, attachedImages.length ? attachedImages : undefined);
     clearInput();
-  }, [value, attachedImages, isStreaming, onBuiltinCommand, onSend, clearInput, onAudioUnlock]);
+  }, [value, attachedImages, isStreaming, onBuiltinCommand, onSend, clearInput, onAudioUnlock, expertSelection]);
 
   const slashQuery = value.startsWith("/") && !/\s/.test(value.slice(1))
     ? value.slice(1).toLowerCase()
@@ -1101,6 +1109,9 @@ export const ChatInput = forwardRef<ChatInputHandle, Props>(function ChatInput({
       }
       if (controlsMenuRef.current && !controlsMenuRef.current.contains(e.target as Node)) {
         setControlsMenuOpen(false);
+      }
+      if (expertPickerRef.current && !expertPickerRef.current.contains(e.target as Node)) {
+        setExpertPickerOpen(false);
       }
       if (historyMenuRef.current && !historyMenuRef.current.contains(e.target as Node) && !textareaRef.current?.contains(e.target as Node)) {
         setHistoryMenuOpen(false);
@@ -1812,6 +1823,123 @@ export const ChatInput = forwardRef<ChatInputHandle, Props>(function ChatInput({
                 <polyline points="21 15 16 10 5 21" />
               </svg>
             </button>
+            {/* Expert picker — right of the attach-image button */}
+            <div ref={expertPickerRef} style={{ position: "relative" }}>
+              <button
+                type="button"
+                onClick={() => setExpertPickerOpen((open) => !open)}
+                title={expertSelection ? `引用: ${expertMembers(expertSelection).join(", ")}` : t("expert.selectExpert")}
+                style={{
+                  flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", gap: 4,
+                  height: 32, padding: "0 8px",
+                  background: "none", border: "none",
+                  borderRadius: 9,
+                  color: expertSelection ? "var(--accent)" : "var(--text-muted)",
+                  cursor: "pointer",
+                  fontSize: 12,
+                  fontWeight: expertSelection ? 600 : 400,
+                  transition: "background 0.12s, color 0.12s",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = "var(--bg-hover)";
+                  e.currentTarget.style.color = expertSelection ? "var(--accent)" : "var(--text)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = "none";
+                  e.currentTarget.style.color = expertSelection ? "var(--accent)" : "var(--text-muted)";
+                }}
+              >
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="9" cy="7" r="3" />
+                  <path d="M3 21v-1a6 6 0 0 1 12 0v1" />
+                  <path d="M17 10l2 2 4-4" />
+                </svg>
+                {expertSelection && (
+                  <span style={{ maxWidth: 110, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                    {expertLabel(expertSelection)}
+                  </span>
+                )}
+              </button>
+              {expertPickerOpen && (
+                <div
+                  style={{
+                    position: "absolute",
+                    bottom: "calc(100% + 6px)",
+                    left: 0,
+                    zIndex: 110,
+                    width: 260,
+                    maxHeight: "min(60vh, 420px)",
+                    overflow: "auto",
+                    padding: 8,
+                    border: "1px solid var(--border)",
+                    borderRadius: 9,
+                    background: "var(--bg-elevated, var(--bg-panel))",
+                    boxShadow: "0 12px 32px rgba(0,0,0,0.24)",
+                    display: "grid",
+                    gap: 2,
+                  }}
+                >
+                  <button
+                    type="button"
+                    onClick={() => { setExpertSelection(null); setExpertPickerOpen(false); }}
+                    style={{
+                      textAlign: "left", padding: "7px 9px", borderRadius: 6,
+                      border: "none", background: "transparent", cursor: "pointer",
+                      color: expertSelection === null ? "var(--accent)" : "var(--text-muted)",
+                      fontSize: 12.5, fontWeight: 600,
+                    }}
+                  >
+                    {t("expert.clear")}
+                  </button>
+                  <div style={{ marginTop: 4, marginBottom: 2, color: "var(--text-dim)", fontSize: 11, fontWeight: 600, letterSpacing: "0.04em", textTransform: "uppercase" }}>
+                    {t("expert.team")}
+                  </div>
+                  {EXPERT_TEAM_PRESETS.map((preset) => {
+                    const active = expertSelection?.kind === "team" && expertSelection.presetId === preset.id;
+                    return (
+                      <button
+                        key={preset.id}
+                        type="button"
+                        onClick={() => { setExpertSelection({ kind: "team", presetId: preset.id }); setExpertPickerOpen(false); }}
+                        style={{
+                          textAlign: "left", padding: "7px 9px", borderRadius: 6,
+                          border: "none", background: active ? "var(--bg-selected)" : "transparent", cursor: "pointer",
+                          color: active ? "var(--accent)" : "var(--text)",
+                          fontSize: 12.5,
+                        }}
+                      >
+                        <span style={{ fontWeight: 600 }}>{preset.label}</span>
+                        <span style={{ marginLeft: 6, color: "var(--text-dim)", fontSize: 11 }}>
+                          {preset.members.length} 人
+                        </span>
+                      </button>
+                    );
+                  })}
+                  <div style={{ marginTop: 6, marginBottom: 2, color: "var(--text-dim)", fontSize: 11, fontWeight: 600, letterSpacing: "0.04em", textTransform: "uppercase" }}>
+                    {t("expert.single")}
+                  </div>
+                  {EXPERT_ROSTER.map((entry) => {
+                    const active = expertSelection?.kind === "expert" && expertSelection.name === entry.name;
+                    return (
+                      <button
+                        key={entry.name}
+                        type="button"
+                        onClick={() => { setExpertSelection({ kind: "expert", name: entry.name }); setExpertPickerOpen(false); }}
+                        style={{
+                          textAlign: "left", padding: "6px 9px", borderRadius: 6,
+                          border: "none", background: active ? "var(--bg-selected)" : "transparent", cursor: "pointer",
+                          color: active ? "var(--accent)" : "var(--text)",
+                          fontSize: 12.5,
+                        }}
+                      >
+                        <span style={{ fontFamily: "var(--font-mono)", fontSize: 11.5, marginRight: 6, color: "var(--text-dim)" }}>{entry.name}</span>
+                        {entry.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
             {/* Model selector — visible always, disabled during streaming */}
             {(modelOptions.length > 0 || currentName || modelError) && onModelChange && (
                 <div ref={dropdownRef} style={{ position: "relative", flex: isMobile ? "1 1 auto" : undefined, minWidth: 0 }}>
