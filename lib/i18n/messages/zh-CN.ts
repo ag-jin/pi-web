@@ -169,6 +169,8 @@ export const zhCNLocale: LocalePlugin = {
     "chat.expandProcess": "展开处理详情",
     "chat.loadEarlier": "向上滚动以加载更早的消息（隐藏 {count} 条）",
     "chat.extensionRequest": "扩展请求",
+    "chat.extensionRawOutput": "原始输出",
+    "chat.extensionOptions": "选项",
     "chat.cancel": "取消",
     "chat.confirm": "确认",
     "chat.submit": "提交",

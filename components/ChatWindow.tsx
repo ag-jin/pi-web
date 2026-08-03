@@ -919,36 +919,52 @@ function ExtensionDialog({
         }}
       >
         <div style={{ padding: "12px 14px", borderBottom: "1px solid var(--border)" }}>
-          <div style={{ color: "var(--text)", fontSize: 14, fontWeight: 650 }}>{request.title}</div>
+          <div style={{ color: "var(--text)", fontSize: 14, fontWeight: 650, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={request.title}>{request.title}</div>
           <div style={{ marginTop: 3, color: "var(--text-dim)", fontSize: 11, fontFamily: "var(--font-mono)" }}>{t("chat.extensionRequest")}</div>
         </div>
 
-        <div style={{ padding: 14 }}>
+        <div style={{ padding: 14, display: "flex", flexDirection: "column", gap: 12, maxHeight: "min(60vh, 480px)", overflow: "auto" }}>
           {request.method === "confirm" && (
-            <div style={{ color: "var(--text-muted)", fontSize: 13, lineHeight: 1.6, whiteSpace: "pre-wrap" }}>{request.message}</div>
+            request.message.length > 600 ? (
+              <details style={{ border: "1px solid var(--border)", borderRadius: 7, overflow: "hidden" }}>
+                <summary style={{ padding: "8px 10px", cursor: "pointer", color: "var(--text-muted)", fontSize: 12, fontWeight: 600, background: "var(--bg-panel)" }}>
+                  {t("chat.extensionRawOutput")}
+                </summary>
+                <pre style={{ margin: 0, padding: 10, maxHeight: 260, overflow: "auto", color: "var(--text-muted)", fontFamily: "var(--font-mono)", fontSize: 12, lineHeight: 1.5, whiteSpace: "pre-wrap", wordBreak: "break-word" }}>{request.message}</pre>
+              </details>
+            ) : (
+              <div style={{ color: "var(--text-muted)", fontSize: 13, lineHeight: 1.6, whiteSpace: "pre-wrap", wordBreak: "break-word" }}>{request.message}</div>
+            )
           )}
           {request.method === "select" && (
-            <div style={{ display: "grid", gap: 8 }}>
-              {request.options.map((option) => (
-                <button
-                  key={option}
-                  onClick={() => onRespond(request, { value: option })}
-                  style={{
-                    width: "100%",
-                    padding: "9px 10px",
-                    borderRadius: 7,
-                    border: "1px solid var(--border)",
-                    background: "var(--bg-panel)",
-                    color: "var(--text)",
-                    cursor: "pointer",
-                    textAlign: "left",
-                    fontSize: 13,
-                  }}
-                >
-                  {option}
-                </button>
-              ))}
-            </div>
+            <>
+              <div style={{ color: "var(--text-dim)", fontSize: 11, fontWeight: 600, letterSpacing: "0.04em", textTransform: "uppercase" }}>
+                {t("chat.extensionOptions")}
+              </div>
+              <div style={{ display: "grid", gap: 8, maxHeight: 280, overflow: "auto" }}>
+                {request.options.map((option) => (
+                  <button
+                    key={option}
+                    onClick={() => onRespond(request, { value: option })}
+                    style={{
+                      width: "100%",
+                      padding: "9px 10px",
+                      borderRadius: 7,
+                      border: "1px solid var(--border)",
+                      background: "var(--bg-panel)",
+                      color: "var(--text)",
+                      cursor: "pointer",
+                      textAlign: "left",
+                      fontSize: 13,
+                      lineHeight: 1.45,
+                      wordBreak: "break-word",
+                    }}
+                  >
+                    {option}
+                  </button>
+                ))}
+              </div>
+            </>
           )}
           {request.method === "input" && (
             <input

@@ -169,6 +169,8 @@ export const enLocale: LocalePlugin = {
     "chat.expandProcess": "Expand process details",
     "chat.loadEarlier": "Scroll up to load earlier messages ({count} hidden)",
     "chat.extensionRequest": "extension request",
+    "chat.extensionRawOutput": "Raw output",
+    "chat.extensionOptions": "Options",
     "chat.cancel": "Cancel",
     "chat.confirm": "Confirm",
     "chat.submit": "Submit",
