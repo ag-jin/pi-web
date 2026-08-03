@@ -129,15 +129,33 @@ function withAssistantBlocks(
 
 function ProcessDetailsGroup({ messageCount, toolCallCount, children, t }: { messageCount: number; toolCallCount: number; children: ReactNode; t: (key: string, params?: Record<string, string | number>) => string }) {
   const [expanded, setExpanded] = useState(false);
+  const rootRef = useRef<HTMLDivElement>(null);
   const parts = [t("chat.processDetails"), `${messageCount} ${t(messageCount === 1 ? "chat.message" : "chat.messages")}`];
   if (toolCallCount > 0) parts.push(`${toolCallCount} ${t(toolCallCount === 1 ? "chat.toolCall" : "chat.toolCalls")}`);
 
+  // Collapsing/expanding changes the document height; without compensation the
+  // scroll position gets clamped and the viewport jumps to an earlier message.
+  const toggle = () => {
+    const root = rootRef.current;
+    const container = root?.closest<HTMLElement>("[data-chat-scroll]");
+    const anchorTop = container && root
+      ? root.getBoundingClientRect().top - container.getBoundingClientRect().top + container.scrollTop
+      : null;
+    setExpanded((v) => !v);
+    if (container && root && anchorTop !== null) {
+      requestAnimationFrame(() => {
+        const newTop = root.getBoundingClientRect().top - container.getBoundingClientRect().top + container.scrollTop;
+        container.scrollTop += newTop - anchorTop;
+      });
+    }
+  };
+
   return (
-    <div style={{ marginBottom: 14 }}>
+    <div ref={rootRef} style={{ marginBottom: 14 }}>
       <button
         type="button"
         aria-expanded={expanded}
-        onClick={() => setExpanded((v) => !v)}
+        onClick={toggle}
         style={{
           display: "flex",
           alignItems: "center",
@@ -527,7 +545,7 @@ export function ChatWindow({ session, newSessionCwd, onAgentEnd, onSessionCreate
             <NoticeShelf notices={notices} floating align="right" />
           </div>
         </div>
-        <div ref={scrollContainerRef} className="min-w-0 flex-1 overflow-x-hidden overflow-y-auto pt-4 [scrollbar-width:none]">
+        <div ref={scrollContainerRef} data-chat-scroll className="min-w-0 flex-1 overflow-x-hidden overflow-y-auto pt-4 [scrollbar-width:none]">
           <div style={{ minWidth: 0, padding: `0 ${CHAT_COLUMN_PADDING}px` }}>
             <div style={{ width: "100%", minWidth: 0, maxWidth: 820, margin: "0 auto" }}>
               <ExtensionWidgets widgets={aboveEditorWidgets} />
@@ -919,7 +937,7 @@ function ExtensionDialog({
         }}
       >
         <div style={{ padding: "12px 14px", borderBottom: "1px solid var(--border)" }}>
-          <div style={{ color: "var(--text)", fontSize: 14, fontWeight: 650, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={request.title}>{request.title}</div>
+          <div style={{ color: "var(--text)", fontSize: 14, fontWeight: 650, lineHeight: 1.5, wordBreak: "break-word", whiteSpace: "pre-wrap" }}>{request.title}</div>
           <div style={{ marginTop: 3, color: "var(--text-dim)", fontSize: 11, fontFamily: "var(--font-mono)" }}>{t("chat.extensionRequest")}</div>
         </div>
 
