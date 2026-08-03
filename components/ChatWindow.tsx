@@ -9,6 +9,9 @@ import { MessageView } from "./MessageView";
 import { ChatInput, type ChatInputHandle } from "./ChatInput";
 import { ChatMinimap, useMessageRefs } from "./ChatMinimap";
 import { ExtensionStatusBar } from "./ExtensionStatusBar";
+import { ExpertStrip } from "./ExpertStrip";
+import { ExpertView } from "./ExpertView";
+import { parseExpertEvents, type ExpertEventMap } from "@/lib/expert-events";
 import { useI18n } from "@/hooks/useI18n";
 import { useAgentSession, type AgentPhase, type NoticeItem } from "@/hooks/useAgentSession";
 import { useAudio } from "@/hooks/useAudio";
@@ -237,6 +240,15 @@ export function ChatWindow({ session, newSessionCwd, onAgentEnd, onSessionCreate
   });
   const sessionBusy = agentRunning || bashRunning;
 
+  // Expert team view (tickets 13-14): parse subagent tool calls from the
+  // message stream; the strip sits above the input, the detail view replaces
+  // the transcript when an expert is selected.
+  const expertEvents = useMemo<ExpertEventMap>(() => parseExpertEvents(messages), [messages]);
+  const [selectedExpert, setSelectedExpert] = useState<string | null>(null);
+  const activeSessionId = session?.id ?? sessionIdRef.current ?? null;
+  useEffect(() => {
+    setSelectedExpert(null);
+  }, [activeSessionId]);
   // Follow streaming output: while the agent streams, keep the view pinned to
   // the bottom unless the user has scrolled away from it. Replaces the old
   // scroll-lock placeholder that left a blank pane during runs.
@@ -545,6 +557,11 @@ export function ChatWindow({ session, newSessionCwd, onAgentEnd, onSessionCreate
             <NoticeShelf notices={notices} floating align="right" />
           </div>
         </div>
+        {selectedExpert ? (
+          <div className="min-w-0 flex-1 overflow-x-hidden overflow-y-auto pt-4" data-chat-scroll>
+            <ExpertView agent={selectedExpert} record={expertEvents.get(selectedExpert)} />
+          </div>
+        ) : (
         <div ref={scrollContainerRef} data-chat-scroll className="min-w-0 flex-1 overflow-x-hidden overflow-y-auto pt-4 [scrollbar-width:none]">
           <div style={{ minWidth: 0, padding: `0 ${CHAT_COLUMN_PADDING}px` }}>
             <div style={{ width: "100%", minWidth: 0, maxWidth: 820, margin: "0 auto" }}>
@@ -761,7 +778,8 @@ export function ChatWindow({ session, newSessionCwd, onAgentEnd, onSessionCreate
             </div>
           </div>
         </div>
-        {isMobile ? null : (
+        )}
+        {isMobile || selectedExpert ? null : (
           <ChatMinimap
             messages={messages}
             streamingMessage={streamState.streamingMessage}
@@ -771,6 +789,26 @@ export function ChatWindow({ session, newSessionCwd, onAgentEnd, onSessionCreate
           />
         )}
       </div>
+
+      <ExpertStrip records={expertEvents} selected={selectedExpert} onSelect={setSelectedExpert} />
+      {selectedExpert && (
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 8,
+            flexShrink: 0,
+            padding: "5px 14px",
+            borderTop: "1px solid var(--border)",
+            background: "var(--bg-panel)",
+            color: "var(--text-muted)",
+            fontSize: 11.5,
+          }}
+        >
+          <span style={{ width: 6, height: 6, borderRadius: "50%", background: "var(--accent)", flexShrink: 0 }} />
+          {t("expert.sendToMainAgent")}
+        </div>
+      )}
 
       <div className="relative">
         <div
