@@ -787,43 +787,6 @@ export function ChatWindow({ session, newSessionCwd, onAgentEnd, onSessionCreate
       </div>
 
       <ExpertStrip records={expertEvents} selected={selectedExpert} onSelect={setSelectedExpert} />
-      {selectedExpert && (
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 8,
-            flexShrink: 0,
-            padding: "5px 14px",
-            borderTop: "1px solid var(--border)",
-            background: "var(--bg-panel)",
-          }}
-        >
-          <button
-            type="button"
-            onClick={() => setSelectedExpert(null)}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 6,
-              height: 26,
-              padding: "0 10px",
-              borderRadius: 5,
-              border: "1px solid var(--accent)",
-              background: "var(--accent-soft, rgba(24,139,119,0.12))",
-              color: "var(--accent)",
-              cursor: "pointer",
-              fontSize: 12,
-              fontWeight: 600,
-            }}
-          >
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <polyline points="15 18 9 12 15 6" />
-            </svg>
-            {t("expert.viewMainSession")}
-          </button>
-        </div>
-      )}
 
       <div className="relative">
         <div
@@ -836,7 +799,49 @@ export function ChatWindow({ session, newSessionCwd, onAgentEnd, onSessionCreate
             <ExtensionWidgets widgets={belowEditorWidgets} />
           </div>
         </div>
-        {chatInputElement}
+        <div style={{ position: "relative" }}>
+          {selectedExpert && (
+            <div
+              style={{
+                position: "absolute",
+                inset: 0,
+                zIndex: 120,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                background: "rgba(0,0,0,0.32)",
+                backdropFilter: "blur(2px)",
+                WebkitBackdropFilter: "blur(2px)",
+              }}
+            >
+              <button
+                type="button"
+                onClick={() => setSelectedExpert(null)}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 8,
+                  height: 34,
+                  padding: "0 16px",
+                  borderRadius: 7,
+                  border: "1px solid var(--accent)",
+                  background: "var(--bg-elevated, var(--bg-panel))",
+                  color: "var(--accent)",
+                  cursor: "pointer",
+                  fontSize: 13,
+                  fontWeight: 650,
+                  boxShadow: "0 6px 18px rgba(0,0,0,0.35)",
+                }}
+              >
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="15 18 9 12 15 6" />
+                </svg>
+                {t("expert.viewMainSession")}
+              </button>
+            </div>
+          )}
+          {chatInputElement}
+        </div>
         <ExtensionStatusBar statuses={extensionStatuses} />
       </div>
       </>
