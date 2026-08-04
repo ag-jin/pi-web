@@ -255,25 +255,15 @@ export function ChatWindow({ session, newSessionCwd, onAgentEnd, onSessionCreate
     const container = scrollContainerRef.current;
     if (container) container.scrollTop = container.scrollHeight;
   }, [selectedExpert, scrollContainerRef]);
-  // Follow streaming output: while the agent streams, keep the view pinned to
-  // the bottom unless the user has scrolled away from it. Replaces the old
-  // scroll-lock placeholder that left a blank pane during runs.
-  const streamFollowRef = useRef(true);
-  useEffect(() => {
-    const container = scrollContainerRef.current;
-    if (!container) return;
-    const onScroll = () => {
-      const nearBottom = container.scrollTop + container.clientHeight >= container.scrollHeight - 80;
-      streamFollowRef.current = nearBottom;
-    };
-    container.addEventListener("scroll", onScroll, { passive: true });
-    return () => container.removeEventListener("scroll", onScroll);
-  }, [scrollContainerRef]);
+  // Follow streaming output only while the user is already near the bottom.
+  // Judged live on every streaming tick (no accumulated state), so browsing
+  // earlier messages is never yanked back to the latest one.
   useEffect(() => {
     if (!streamState.isStreaming || !streamState.streamingMessage) return;
     const container = scrollContainerRef.current;
-    if (!container || !streamFollowRef.current) return;
-    container.scrollTop = container.scrollHeight;
+    if (!container) return;
+    const nearBottom = container.scrollTop + container.clientHeight >= container.scrollHeight - 160;
+    if (nearBottom) container.scrollTop = container.scrollHeight;
   }, [streamState.streamingMessage, streamState.isStreaming, scrollContainerRef]);
   useEffect(() => {
     if (!extensionDialog || soundedExtensionDialogIdRef.current === extensionDialog.id) return;
@@ -807,12 +797,31 @@ export function ChatWindow({ session, newSessionCwd, onAgentEnd, onSessionCreate
             padding: "5px 14px",
             borderTop: "1px solid var(--border)",
             background: "var(--bg-panel)",
-            color: "var(--text-muted)",
-            fontSize: 11.5,
           }}
         >
-          <span style={{ width: 6, height: 6, borderRadius: "50%", background: "var(--accent)", flexShrink: 0 }} />
-          {t("expert.sendToMainAgent")}
+          <button
+            type="button"
+            onClick={() => setSelectedExpert(null)}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 6,
+              height: 26,
+              padding: "0 10px",
+              borderRadius: 5,
+              border: "1px solid var(--accent)",
+              background: "var(--accent-soft, rgba(24,139,119,0.12))",
+              color: "var(--accent)",
+              cursor: "pointer",
+              fontSize: 12,
+              fontWeight: 600,
+            }}
+          >
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="15 18 9 12 15 6" />
+            </svg>
+            {t("expert.viewMainSession")}
+          </button>
         </div>
       )}
 

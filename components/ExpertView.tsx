@@ -30,7 +30,7 @@ function TurnGroup({
   turn: ExpertRecord["turns"][number];
   t: (key: string, params?: Record<string, string | number>) => string;
 }) {
-  const [expanded, setExpanded] = useState(index === 0);
+  const [expanded, setExpanded] = useState(true);
   const meta = STATUS_META[turn.status];
   const duration = formatDuration(
     turn.completedAt !== undefined ? turn.completedAt - turn.startedAt : undefined,
