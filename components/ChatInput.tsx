@@ -337,7 +337,26 @@ export const ChatInput = forwardRef<ChatInputHandle, Props>(function ChatInput({
   const [thinkingDropdownOpen, setThinkingDropdownOpen] = useState(false);
   const [controlsMenuOpen, setControlsMenuOpen] = useState(false);
   const [expertPickerOpen, setExpertPickerOpen] = useState(false);
-  const [expertSelection, setExpertSelection] = useState<ExpertSelection>(null);
+  // Persist the expert reference across sessions/refreshes (常驻引用).
+  const [expertSelection, setExpertSelection] = useState<ExpertSelection>(() => {
+    if (typeof window === "undefined") return null;
+    try {
+      const raw = window.localStorage.getItem("pi-web:expert-selection");
+      if (!raw) return null;
+      const parsed = JSON.parse(raw) as ExpertSelection;
+      if (parsed?.kind === "team" || parsed?.kind === "expert") return parsed;
+    } catch { /* ignore */ }
+    return null;
+  });
+  useEffect(() => {
+    try {
+      if (expertSelection) {
+        window.localStorage.setItem("pi-web:expert-selection", JSON.stringify(expertSelection));
+      } else {
+        window.localStorage.removeItem("pi-web:expert-selection");
+      }
+    } catch { /* ignore */ }
+  }, [expertSelection]);
   const [attachedImages, setAttachedImages] = useState<AttachedImage[]>(() => (
     draftKey ? draftImagesToAttachedImages(getDraft(draftKey)?.images) : []
   ));
