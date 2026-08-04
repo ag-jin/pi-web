@@ -18,6 +18,7 @@ export const EXPERT_ROSTER: readonly ExpertRosterEntry[] = [
   { name: "ticket-splitter", label: "拆票" },
   { name: "implementer", label: "实现" },
   { name: "spec-reviewer", label: "规格审查" },
+  { name: "reviewer-terra", label: "Terra 审查" },
   { name: "bug-hunter", label: "排障" },
   { name: "researcher", label: "调研" },
   { name: "triager", label: "分诊" },
@@ -35,34 +36,10 @@ export interface ExpertTeamPreset {
 
 export const EXPERT_TEAM_PRESETS: readonly ExpertTeamPreset[] = [
   {
-    id: "core",
-    label: "核心开发团队",
-    members: [
-      "flow-router",
-      "griller",
-      "spec-writer",
-      "ticket-splitter",
-      "implementer",
-      "spec-reviewer",
-      "bug-hunter",
-    ],
-  },
-  {
-    id: "research",
-    label: "调研辅助团队",
-    members: [
-      "researcher",
-      "triager",
-      "handoff-writer",
-      "domain-modeler",
-      "architecture-scout",
-      "module-designer",
-    ],
-  },
-  {
-    id: "full",
-    label: "完整专家团队",
-    members: EXPERT_ROSTER.map((entry) => entry.name),
+    id: "team",
+    label: "专家团队",
+    // 成员不预设:由主 agent 根据任务自主判断调用哪些专家。
+    members: [],
   },
 ];
 
@@ -96,9 +73,7 @@ export function expertMembers(selection: ExpertSelection): string[] {
 export function expertReferenceText(selection: ExpertSelection): string | null {
   if (!selection) return null;
   if (selection.kind === "team") {
-    const preset = EXPERT_TEAM_PRESETS.find((p) => p.id === selection.presetId);
-    const members = preset?.members ?? [];
-    return `请按专家团队流程处理以下任务,调用专家:${members.join(", ")}`;
+    return "请按专家团队流程处理以下任务,由你自主判断需要调用哪些专家";
   }
   return `请调用专家 ${selection.name} 处理以下任务`;
 }

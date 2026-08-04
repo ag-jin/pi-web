@@ -249,6 +249,12 @@ export function ChatWindow({ session, newSessionCwd, onAgentEnd, onSessionCreate
   useEffect(() => {
     setSelectedExpert(null);
   }, [activeSessionId]);
+  // Returning to the main session lands at the latest message, not the top.
+  useEffect(() => {
+    if (selectedExpert !== null) return;
+    const container = scrollContainerRef.current;
+    if (container) container.scrollTop = container.scrollHeight;
+  }, [selectedExpert, scrollContainerRef]);
   // Follow streaming output: while the agent streams, keep the view pinned to
   // the bottom unless the user has scrolled away from it. Replaces the old
   // scroll-lock placeholder that left a blank pane during runs.

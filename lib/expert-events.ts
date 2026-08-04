@@ -56,8 +56,10 @@ export interface ExpertRecord {
 
 export type ExpertEventMap = Map<string, ExpertRecord>;
 
-/** Cap on the tool-result text kept per turn. */
-const MAX_TURN_OUTPUT = 4000;
+/** Cap on the tool-result text kept per turn (kept generous: the detail view
+ * renders the full output in a scrollable region, so this only guards against
+ * pathological multi-hundred-KB results). */
+const MAX_TURN_OUTPUT = 50_000;
 
 const SUBAGENT_TOOL_RE = /^subagent(_|\b)/;
 

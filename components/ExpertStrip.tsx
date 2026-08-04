@@ -67,10 +67,11 @@ export function ExpertStrip({
         background: "var(--bg-panel)",
       }}
     >
-      <span style={{ color: "var(--text-dim)", fontSize: 11, fontWeight: 600, letterSpacing: "0.04em", textTransform: "uppercase", flexShrink: 0 }}>
-        {t("expert.experts")}
-      </span>
-      <div ref={scrollRef} style={{ display: "flex", gap: 6, overflowX: "auto", scrollbarWidth: "none", minWidth: 0, flex: 1 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0, maxWidth: 820, margin: "0 auto", width: "100%" }}>
+        <span style={{ color: "var(--text-dim)", fontSize: 11, fontWeight: 600, letterSpacing: "0.04em", textTransform: "uppercase", flexShrink: 0 }}>
+          {t("expert.experts")}
+        </span>
+        <div ref={scrollRef} style={{ display: "flex", gap: 6, overflowX: "auto", scrollbarWidth: "none", minWidth: 0, flex: 1 }}>
         <button
           type="button"
           data-expert="__main__"
@@ -138,6 +139,7 @@ export function ExpertStrip({
             </button>
           );
         })}
+        </div>
       </div>
     </div>
   );

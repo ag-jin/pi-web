@@ -1910,7 +1910,7 @@ export const ChatInput = forwardRef<ChatInputHandle, Props>(function ChatInput({
                       >
                         <span style={{ fontWeight: 600 }}>{preset.label}</span>
                         <span style={{ marginLeft: 6, color: "var(--text-dim)", fontSize: 11 }}>
-                          {preset.members.length} 人
+                          主 agent 自主判断
                         </span>
                       </button>
                     );

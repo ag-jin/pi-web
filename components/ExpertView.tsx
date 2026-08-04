@@ -92,7 +92,7 @@ function TurnGroup({
               style={{
                 margin: 0,
                 padding: 8,
-                maxHeight: 240,
+                maxHeight: "min(55vh, 520px)",
                 overflow: "auto",
                 border: "1px solid var(--border)",
                 borderRadius: 5,
@@ -107,6 +107,11 @@ function TurnGroup({
             >
               {turn.output}
             </pre>
+          ) : turn.status === "running" ? (
+            <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12, color: "var(--accent)" }}>
+              <span style={{ width: 8, height: 8, borderRadius: "50%", background: "var(--accent)", animation: "pulse 1.5s infinite", flexShrink: 0 }} />
+              {t("expert.running")}…
+            </div>
           ) : (
             <div style={{ fontSize: 11, color: "var(--text-dim)" }}>{t("expert.noTurns")}</div>
           )}
