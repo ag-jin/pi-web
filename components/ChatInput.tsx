@@ -338,10 +338,13 @@ export const ChatInput = forwardRef<ChatInputHandle, Props>(function ChatInput({
   const [controlsMenuOpen, setControlsMenuOpen] = useState(false);
   const [expertPickerOpen, setExpertPickerOpen] = useState(false);
   // Persist the expert reference across sessions/refreshes (常驻引用).
+  // Key versioned so stale selections from earlier tests never resurface;
+  // only an explicit user choice persists.
+  const EXPERT_SELECTION_KEY = "pi-web:expert-selection-v2";
   const [expertSelection, setExpertSelection] = useState<ExpertSelection>(() => {
     if (typeof window === "undefined") return null;
     try {
-      const raw = window.localStorage.getItem("pi-web:expert-selection");
+      const raw = window.localStorage.getItem(EXPERT_SELECTION_KEY);
       if (!raw) return null;
       const parsed = JSON.parse(raw) as ExpertSelection;
       if (parsed?.kind === "team" || parsed?.kind === "expert") return parsed;
@@ -351,9 +354,9 @@ export const ChatInput = forwardRef<ChatInputHandle, Props>(function ChatInput({
   useEffect(() => {
     try {
       if (expertSelection) {
-        window.localStorage.setItem("pi-web:expert-selection", JSON.stringify(expertSelection));
+        window.localStorage.setItem(EXPERT_SELECTION_KEY, JSON.stringify(expertSelection));
       } else {
-        window.localStorage.removeItem("pi-web:expert-selection");
+        window.localStorage.removeItem(EXPERT_SELECTION_KEY);
       }
     } catch { /* ignore */ }
   }, [expertSelection]);
